@@ -3,7 +3,7 @@ import websocket from '@fastify/websocket'
 import type { FastifyInstance } from 'fastify'
 import { connectionRegistry } from '../realtime/connectionRegistry.js'
 import { routeEvent } from '../realtime/router/eventRouter.js'
-import { ClientEventSchema } from '../realtime/schemas/clientEventsSchema.js'
+import { ClientEventSchema } from '../realtime/eventSchemas/clientEventsSchema.js'
 import { channelSubscriptionManager } from '../realtime/channelSubscriptionManager.js'
 import type { ClientEvent } from '../realtime/events/clientEvents.js'
 import type { RawData } from 'ws'
@@ -12,7 +12,16 @@ async function websocketPlugin(app: FastifyInstance) {
   await app.register(websocket)
 
   app.get('/ws', { websocket: true }, (socket, req) => {
-    const userId = 'demo-user' // temporary until auth
+    const user_Id = 'demo-user' // temporary until auth
+
+    // temp setup
+    const url = new URL(req.url!, `http://${req.headers.host}`)
+    const userId = url.searchParams.get('userId')
+
+    if (!userId) {
+      socket.close()
+      return
+    }
 
     connectionRegistry.add(userId, socket)
 

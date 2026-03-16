@@ -1,8 +1,9 @@
 import type WebSocket from 'ws'
-import type { ClientEvent } from '../schemas/clientEventsSchema.js'
+import type { ClientEvent } from '../eventSchemas/clientEventsSchema.js'
 import { joinChannelHandler } from '../handlers/joinChannelHandler.js'
 import { leaveChannelHandler } from '../handlers/leaveChannelHandler.js'
 import { sendMessageHandler } from '../handlers/sendMessageHandler.js'
+import { startDMHandler } from '../handlers/startDMHandler.js'
 
 export function routeEvent(event: ClientEvent, socket: WebSocket, userId: string) {
   switch (event.type) {
@@ -16,6 +17,10 @@ export function routeEvent(event: ClientEvent, socket: WebSocket, userId: string
 
     case 'SEND_MESSAGE':
       sendMessageHandler(event, socket, userId)
+      break
+
+    case 'START_DM':
+      startDMHandler(event, socket, userId)
       break
   }
 }

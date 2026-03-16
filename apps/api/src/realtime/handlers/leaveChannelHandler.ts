@@ -1,5 +1,5 @@
 import type WebSocket from 'ws'
-import type { ClientEvent } from '../schemas/clientEventsSchema.js'
+import type { ClientEvent } from '../eventSchemas/clientEventsSchema.js'
 import { channelSubscriptionManager } from '../channelSubscriptionManager.js'
 
 export function leaveChannelHandler(event: ClientEvent, socket: WebSocket) {

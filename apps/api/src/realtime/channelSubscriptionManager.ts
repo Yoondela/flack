@@ -23,17 +23,21 @@ class ChannelSubscriptionManager {
     }
   }
 
-  broadcast(channelId: string, payload: unknown) {
+  broadcast(channelId: string, payload: unknown, exclude?: WebSocket) {
     const sockets = this.channels.get(channelId)
-
+  
     if (!sockets) return
-
+  
     const message = JSON.stringify(payload)
-
+  
     for (const socket of sockets) {
+    
+      if (socket === exclude) continue
+    
       socket.send(message)
     }
   }
+
 
   removeSocket(socket: WebSocket) {
     for (const sockets of this.channels.values()) {
