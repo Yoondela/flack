@@ -1,26 +1,13 @@
-import "./globals.css"
-import WSProvider from "@/providers/ws-provider"
-import { Geist } from "next/font/google";
-import { cn } from "@/lib/utils";
-
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
-
+import './globals.css'
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-
   return (
-    <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body>
-
-        <WSProvider>
-          {children}
-        </WSProvider>
-
-      </body>
+    <html lang="en">
+      <body>{children}</body>
     </html>
   )
 }
