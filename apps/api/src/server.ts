@@ -2,6 +2,7 @@ import Fastify from 'fastify'
 import type { WebSocket } from 'ws'
 import websocketPlugin from '@fastify/websocket'
 import type { FastifyRequest } from 'fastify'
+import { z } from 'zod'
 
 import { EventDispatcher } from '@/application/events/eventDispatcher.js'
 import { SocketGateway } from '@/interface/websocket/socketGateway.js'
@@ -13,6 +14,7 @@ import { InMemoryMessageRepo } from '@/infrastructure/repositories/inMemoryMessa
 import { makeSendMessage } from '@/application/use-cases/sendMessage.js'
 import { makeCreateChannel } from '@/application/use-cases/createChannel.js'
 import { makeStartDM } from '@/application/use-cases/startDm.js'
+import { makeEnsureDMChannel } from '@/application/use-cases/ensureDMChannel.js'
 import { createEventRouter } from '@/interface/websocket/evenRouter.js'
 
 
@@ -35,11 +37,17 @@ registerEventHandlers(dispatcher, gateway, channelRepo)
 const sendMessage = makeSendMessage(channelRepo, messageRepo, dispatcher)
 const createChannel = makeCreateChannel(channelRepo, dispatcher)
 const startDM = makeStartDM(channelRepo, dispatcher)
+const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher)
 
 const routeEvent = createEventRouter({
   sendMessage,
   createChannel,
   startDM,
+})
+
+const EnsureDMBody = z.object({
+  userA: z.string(),
+  userB: z.string(),
 })
 
 
@@ -82,6 +90,28 @@ app.get(
 })
 })
 
+// --- HTTP route (internal service) ---
+app.post('/ensure-dm', async (req, reply) => {
+  console.log("Ensure DM route hit with body: ", req.body)
+  try {
+    const body = EnsureDMBody.parse(req.body)
+    const channel = await ensureDMChannel(body)
+    const members = await channelRepo.getMembers(channel.id)
+
+    return reply.send({
+      channel: {
+        id: channel.id,
+        type: channel.type,
+        createdAt: channel.createdAt.toISOString(),
+      },
+      members: members.map(m => m.userId),
+    })
+  } catch (err: any) {
+    return reply.code(400).send({
+      error: 'Invalid ensure-dm request body',
+    })
+  }
+})
 
 // --- start server ---
 app.listen({ port: 3001 }, (err, address) => {

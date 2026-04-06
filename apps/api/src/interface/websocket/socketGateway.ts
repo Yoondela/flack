@@ -16,7 +16,7 @@ export class SocketGateway {
   }
 
   sendToUser(userId: string, event: ServerEvent) {
-    console.log("sending to user @ sendToUser")
+    console.log("sending to user @ sendToUser", event)
 
     const socket = this.clients.get(userId)
 

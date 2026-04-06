@@ -4,6 +4,7 @@ import { ChannelSchema } from '@/shared/schemas/channel.schema.js'
 import { ChannelMemberSchema } from '@/shared/schemas/channelMember.schema.js'
 import type { ChannelRepository } from '@/domain/channel/channel.repository.js'
 import { EventDispatcher } from '../events/eventDispatcher.js'
+import { makeEnsureDMChannel } from './ensureDMChannel.js'
 
 const StartDMInput = z.object({
   userA: z.string(),

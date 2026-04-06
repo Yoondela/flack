@@ -23,16 +23,11 @@ export function ChatSheet({
   }) {
     const [activeUserId, setActiveUserId] = useState<string | null>(null)
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap">
         <Sheet open={open} onOpenChange={onOpenChange}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="capitalize">
-              chatssssssssss
-            </Button>
-          </SheetTrigger>
           <SheetContent
             side={'right'}
-            className="data-[side=bottom]:max-h-[50vh] data-[side=top]:max-h-[50vh]"
+            className="data-[side=bottom]:max-h-[100vh] data-[side=top]:max-h-[100vh]"
           >
             <SheetHeader>
               {activeUserId ? (

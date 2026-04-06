@@ -8,16 +8,33 @@ export function registerEventHandlers(
   channelRepo: ChannelRepository
 ) {
   dispatcher.on('MESSAGE_CREATED', async (event) => {
-    const members = await channelRepo.getMembers(event.payload.channelId)
+    const { channelId, senderId } = event.payload
+
+    const members = await channelRepo.getMembers(channelId)
 
     for (const member of members) {
-      gateway.sendToUser(member.userId, event)
+      const isSender = member.userId === senderId
+      gateway.sendToUser(member.userId, {
+        type: isSender ? 'MESSAGE_SENT' : 'MESSAGE_RECEIVED',
+        payload: event.payload,
+      })
     }
   })
 
   dispatcher.on('CHANNEL_CREATED', (event) => {
-  for (const userId of event.payload.members) {
-    gateway.sendToUser(userId, event)
-  }
-})
+    for (const userId of event.payload.members) {
+      console.log("Emitting channel created event to user: ", userId)
+      gateway.sendToUser(userId, event)
+    }
+  })
+
+  dispatcher.on('CHANNEL_AVAILABLE', (event) => {
+    for (const userId of event.payload.members) {
+      gateway.sendToUser(userId, {
+        type: 'CHANNEL_AVAILABLE',
+        payload: event.payload,
+      })
+    }
+  })
+
 }
