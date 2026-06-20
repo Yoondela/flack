@@ -8,14 +8,18 @@ import { EventDispatcher } from '@/application/events/eventDispatcher.js'
 import { SocketGateway } from '@/interface/websocket/socketGateway.js'
 import { registerEventHandlers } from '@/interface/websocket/registerEventHandlers.js'
 
+import { ProfilerClient } from '@/infrastructure/services/profilerClient.js'
+import { InMemoryUserRepo } from '@/infrastructure/repositories/inMemoryUserRepo.js'
 import { InMemoryChannelRepo } from '@/infrastructure/repositories/inMemoryChannelRepo.js'
 import { InMemoryMessageRepo } from '@/infrastructure/repositories/inMemoryMessageRepo.js'
 
+import { makeSyncUser } from '@/application/use-cases/syncUser.js'
 import { makeSendMessage } from '@/application/use-cases/sendMessage.js'
 import { makeCreateChannel } from '@/application/use-cases/createChannel.js'
 import { makeStartDM } from '@/application/use-cases/startDm.js'
 import { makeEnsureDMChannel } from '@/application/use-cases/ensureDMChannel.js'
 import { createEventRouter } from '@/interface/websocket/evenRouter.js'
+import { appContext } from '@/context/app.context.js'
 
 
 const app = Fastify()
@@ -25,19 +29,23 @@ await app.register(websocketPlugin)
 // --- Core systems ---
 const dispatcher = new EventDispatcher()
 const gateway = new SocketGateway()
+const profilerClient = new ProfilerClient()
 
 // --- Repos ---
 const channelRepo = new InMemoryChannelRepo()
 const messageRepo = new InMemoryMessageRepo()
+const userRepo = new InMemoryUserRepo()
+
 
 // wire events → sockets
-registerEventHandlers(dispatcher, gateway, channelRepo)
+registerEventHandlers(dispatcher, gateway, channelRepo, userRepo)
 
 // --- Use cases ---
+const syncUser = makeSyncUser(userRepo, profilerClient)
 const sendMessage = makeSendMessage(channelRepo, messageRepo, dispatcher)
 const createChannel = makeCreateChannel(channelRepo, dispatcher)
-const startDM = makeStartDM(channelRepo, dispatcher)
-const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher)
+const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher, userRepo)
+const startDM = makeStartDM(ensureDMChannel)
 
 const routeEvent = createEventRouter({
   sendMessage,
@@ -55,7 +63,7 @@ const EnsureDMBody = z.object({
 app.get(
   '/ws',
   { websocket: true },
-  (socket: WebSocket, req: FastifyRequest) => {
+  async (socket: WebSocket, req: FastifyRequest) => {
 
     console.log('WS ROUTE HIT')
     
@@ -70,6 +78,8 @@ app.get(
     return
   }
 
+  appContext.setFlackUserId(userId)
+  await syncUser(userId) // ensure user exists FIRST
   gateway.addClient(userId, socket)
 
   socket.on('message', async (raw: Buffer) => {
@@ -98,6 +108,7 @@ app.post('/ensure-dm', async (req, reply) => {
     const channel = await ensureDMChannel(body)
     const members = await channelRepo.getMembers(channel.id)
 
+    console.log("Ensured DM channel: ", channel)
     return reply.send({
       channel: {
         id: channel.id,

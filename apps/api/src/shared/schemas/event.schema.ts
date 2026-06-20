@@ -1,11 +1,13 @@
 import { z } from 'zod'
+import { ChannelMemberSchema } from './channelMember.schema.js'
+import { MessageSchema } from './message.schema.js'
 
 export const MessageCreatedEventSchema = z.object({
   type: z.literal('MESSAGE_CREATED'),
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    senderId: z.string(),
+    sender: z.string(),
     content: z.string(),
     createdAt: z.string(),
   }),
@@ -16,7 +18,7 @@ export const MessageSentEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    senderId: z.string(),
+    sender: z.string(),
     content: z.string(),
     createdAt: z.string(),
   }),
@@ -27,18 +29,20 @@ export const MessageReceivedEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    senderId: z.string(),
+    sender: z.string(),
     content: z.string(),
     createdAt: z.string(),
   }),
 })
 
+
 export const ChannelCreatedEventSchema = z.object({
   type: z.literal('CHANNEL_CREATED'),
   payload: z.object({
     id: z.string(),
+    name: z.string().min(1).max(100).optional(),
     type: z.enum(['public', 'dm']),
-    members: z.array(z.string()),
+    members: z.array(ChannelMemberSchema),
     createdAt: z.string(),
   }),
 })
@@ -48,7 +52,7 @@ export const ChannelAvailableEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     type: z.enum(['public', 'dm']),
-    members: z.array(z.string()),
+    members: z.array(ChannelMemberSchema),
     createdAt: z.string(),
   }),
 })

@@ -11,7 +11,7 @@ export class InMemoryChannelRepo implements ChannelRepository {
   private members: ChannelMember[] = []
 
 
-
+// a try block around the whole method is needed
 async createDMChannel(userA: string, userB: string): Promise<Channel> {
 
   console.log("Attempting to create DM channel between ", userA, " and ", userB)
@@ -33,6 +33,8 @@ async createDMChannel(userA: string, userB: string): Promise<Channel> {
 
   const now = new Date()
 
+  console.log("Adding members to the channel: ", userA, " and ", userB)
+  
   this.members.push(
     ChannelMemberSchema.parse({
       channelId: channel.id,
@@ -50,6 +52,8 @@ async createDMChannel(userA: string, userB: string): Promise<Channel> {
       joinedAt: now,
     })
   )
+
+console.log("DM channel created with members: ", this.members.filter(m => m.channelId === channel.id))  
 
   return channel
 }

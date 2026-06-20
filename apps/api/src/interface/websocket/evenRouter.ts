@@ -35,9 +35,12 @@ export function createEventRouter(deps: {
           break
 
         case 'CREATE_CHANNEL':
+          console.log("In CREATE_CHANNEL event with payload:", event.payload)
           await deps.createChannel({
             type: event.payload.type,
             creatorId: userId,
+            name: event.payload.name,
+            memberIds: event.payload.memberIds || [],
           })
           break
       }

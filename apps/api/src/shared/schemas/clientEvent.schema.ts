@@ -19,6 +19,8 @@ export const CreateChannelSchema = z.object({
   type: z.literal('CREATE_CHANNEL'),
   payload: z.object({
     type: z.enum(['public', 'dm']),
+    name: z.string().min(1).max(100).optional(),
+    memberIds: z.array(z.string()).min(1).optional(),
   }),
 })
 

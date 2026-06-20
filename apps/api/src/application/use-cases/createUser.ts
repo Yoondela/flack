@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { UserSchema } from '@/shared/schemas/user.schema.js'
-import type { UserRepository } from '@/domain/user/user-repository.js'
+import type { UserRepository } from '@/domain/user/user.repository.js'
 
 const CreateUserInput = z.object({
   email: z.string().email(),

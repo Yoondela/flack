@@ -5,7 +5,7 @@ export default function Page() {
     <div className="h-screen w-full">
       <ChatRoot
         userId="user-1"
-        role="client" // change to 'client' to test LiteChat
+        role="provider" // change to 'client' to test LiteChat
       />
     </div>
   )

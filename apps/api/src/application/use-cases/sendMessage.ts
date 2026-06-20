@@ -20,18 +20,23 @@ export function makeSendMessage(
     console.log("saving message..")
     const parsed = SendMessageInput.parse(input)
 
+    console.log("Parsed input:", parsed)
+
     const members = await channelRepo.getMembers(parsed.channelId)
 
+    console.log("Channel members:", members)
 
     const isMember = members.some(m => m.userId === parsed.senderId)
     if (!isMember) {
       throw new Error('User is not a member of this channel')
     }
 
+    console.log("User is a member of the channel, proceeding to save message...")
+
     const message = MessageSchema.parse({
       id: randomUUID(),
       channelId: parsed.channelId,
-      senderId: parsed.senderId,
+      sender: parsed.senderId,
       content: parsed.content,
       createdAt: new Date(),
     })
@@ -45,7 +50,7 @@ export function makeSendMessage(
       payload: {
         id: saved.id,
         channelId: saved.channelId,
-        senderId: saved.senderId,
+        sender: saved.sender,
         content: saved.content,
         createdAt: saved.createdAt.toISOString(),
       },
