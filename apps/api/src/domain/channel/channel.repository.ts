@@ -8,6 +8,9 @@ export interface ChannelRepository {
   addMember(member: ChannelMember): Promise<void>
   getMembers(channelId: string): Promise<ChannelMember[]>
 
-  createDMChannel(userA: string, userB: string): Promise<Channel>
+  // createDMChannel(userA: string, userB: string): Promise<Channel>
   findDMChannel(userA: string, userB: string): Promise<Channel | null>
+  findChannelsForUser(
+  userId: string,
+): Promise<Channel[]>
 }

@@ -9,6 +9,8 @@ const StartDMInput = z.object({
 export function makeStartDM(
   ensureDMChannel: ReturnType<typeof makeEnsureDMChannel>,
 ) {
+  console.log('CP-3')
+
   return async function startDM(
     input: z.infer<typeof StartDMInput>,
   ) {

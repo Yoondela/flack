@@ -9,30 +9,32 @@ export function registerEventHandlers(
   channelRepo: ChannelRepository,
   userRepo: UserRepository,
 ) {
-dispatcher.on('MESSAGE_CREATED', async (event) => {
-  const { channelId } = event.payload
+  console.log('CP-5')
 
-  const senderId = event.payload.sender
-  
-  const members = await channelRepo.getMembers(channelId)
+  dispatcher.on('MESSAGE_CREATED', async (event) => {
+    const { channelId } = event.payload
 
-  // 🔥 find sender as ChannelMember (already has username + avatar)
-  const sender = members.find(m => m.userId === senderId)
+    const senderId = event.payload.sender
 
-  if (!sender) {
-    console.error('Sender not found in members')
-    return
-  }
+    const members = await channelRepo.getMembers(channelId)
 
-  for (const member of members) {
-    const isSender = member.userId === senderId
+    // 🔥 find sender as ChannelMember (already has username + avatar)
+    const sender = members.find(m => m.userId === senderId)
 
-    gateway.sendToUser(member.userId, {
-      type: isSender ? 'MESSAGE_SENT' : 'MESSAGE_RECEIVED',
-      payload: event.payload,
-    })
-  }
-})
+    if (!sender) {
+      console.error('Sender not found in members')
+      return
+    }
+
+    for (const member of members) {
+      const isSender = member.userId === senderId
+
+      gateway.sendToUser(member.userId, {
+        type: isSender ? 'MESSAGE_SENT' : 'MESSAGE_RECEIVED',
+        payload: event.payload,
+      })
+    }
+  })
 
 
   dispatcher.on('CHANNEL_CREATED', async (event) => {

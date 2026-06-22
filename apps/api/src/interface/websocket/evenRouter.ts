@@ -12,6 +12,8 @@ export function createEventRouter(deps: {
     userId: string
   ) {
     try {
+      console.log('CP-2')
+
       const parsed = JSON.parse(raw.toString())
 
       const event = ClientEventSchema.parse(parsed)

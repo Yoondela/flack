@@ -1,8 +1,11 @@
 import type WebSocket from 'ws'
 import type { ServerEvent } from '@/shared/schemas/event.schema.js'
 
+console.log('CP-6')
 export class SocketGateway {
   private clients: Map<string, WebSocket> = new Map()
+
+  
 
   addClient(userId: string, socket: WebSocket) {
     console.log("adding client @ add client")

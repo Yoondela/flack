@@ -1,30 +1,42 @@
+import 'dotenv/config'
 import Fastify from 'fastify'
+import cors from '@fastify/cors'
 import type { WebSocket } from 'ws'
 import websocketPlugin from '@fastify/websocket'
 import type { FastifyRequest } from 'fastify'
 import { z } from 'zod'
+
+import { connectDatabase } from '@/infrastructure/db/mongoose.js'
 
 import { EventDispatcher } from '@/application/events/eventDispatcher.js'
 import { SocketGateway } from '@/interface/websocket/socketGateway.js'
 import { registerEventHandlers } from '@/interface/websocket/registerEventHandlers.js'
 
 import { ProfilerClient } from '@/infrastructure/services/profilerClient.js'
-import { InMemoryUserRepo } from '@/infrastructure/repositories/inMemoryUserRepo.js'
-import { InMemoryChannelRepo } from '@/infrastructure/repositories/inMemoryChannelRepo.js'
-import { InMemoryMessageRepo } from '@/infrastructure/repositories/inMemoryMessageRepo.js'
+import { MongoUserRepo } from './infrastructure/repositories/MongoUserRepo.js'
+import { MongoChannelRepo } from './infrastructure/repositories/MongoChannelRepo.js'
+import { MongoMessageRepo } from './infrastructure/repositories/MongoMessageRepo.js'
 
 import { makeSyncUser } from '@/application/use-cases/syncUser.js'
 import { makeSendMessage } from '@/application/use-cases/sendMessage.js'
 import { makeCreateChannel } from '@/application/use-cases/createChannel.js'
 import { makeStartDM } from '@/application/use-cases/startDm.js'
 import { makeEnsureDMChannel } from '@/application/use-cases/ensureDMChannel.js'
+import { makeGetChannels } from '@/application/use-cases/getUserChannels.js'
+import { makeGetChannelMessages } from './application/use-cases/getMessages.js'
+import { makeGetChatData } from '@/application/use-cases/getChatData.js'
 import { createEventRouter } from '@/interface/websocket/evenRouter.js'
 import { appContext } from '@/context/app.context.js'
 
 
 const app = Fastify()
 
+await app.register(cors, {
+  origin: true,
+})
+
 await app.register(websocketPlugin)
+await connectDatabase()
 
 // --- Core systems ---
 const dispatcher = new EventDispatcher()
@@ -32,9 +44,11 @@ const gateway = new SocketGateway()
 const profilerClient = new ProfilerClient()
 
 // --- Repos ---
-const channelRepo = new InMemoryChannelRepo()
-const messageRepo = new InMemoryMessageRepo()
-const userRepo = new InMemoryUserRepo()
+// const channelRepo = new InMemoryChannelRepo()
+const channelRepo = new MongoChannelRepo()
+
+const messageRepo = new MongoMessageRepo()
+const userRepo = new MongoUserRepo()
 
 
 // wire events → sockets
@@ -44,8 +58,14 @@ registerEventHandlers(dispatcher, gateway, channelRepo, userRepo)
 const syncUser = makeSyncUser(userRepo, profilerClient)
 const sendMessage = makeSendMessage(channelRepo, messageRepo, dispatcher)
 const createChannel = makeCreateChannel(channelRepo, dispatcher)
-const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher, userRepo)
+const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher, userRepo, syncUser)
 const startDM = makeStartDM(ensureDMChannel)
+const getChannels = makeGetChannels(channelRepo)
+const getChannelMessages = makeGetChannelMessages(messageRepo)
+const getChatData = makeGetChatData(
+  getChannels,
+  getChannelMessages,
+)
 
 const routeEvent = createEventRouter({
   sendMessage,
@@ -83,6 +103,7 @@ app.get(
   gateway.addClient(userId, socket)
 
   socket.on('message', async (raw: Buffer) => {
+        console.log('CP-1')
         console.log('message received:', raw)
 
       await routeEvent(raw, socket, userId)
@@ -123,6 +144,60 @@ app.post('/ensure-dm', async (req, reply) => {
     })
   }
 })
+
+// app.get(
+//   '/channels/:userId',
+//   async (req, reply) => {
+//     const { userId } = req.params as {
+//       userId: string
+//     }
+
+//     const channels =
+//       await getChannels(userId)
+
+//     return reply.send(channels)
+//   },
+// )
+
+app.get(
+  '/channels/:channelId/messages',
+  async (req, reply) => {
+    const { channelId } =
+      req.params as {
+        channelId: string
+      }
+
+    const messages =
+      await getChannelMessages(
+        channelId,
+      )
+
+    return reply.send(messages)
+  },
+)
+
+app.get(
+  '/channels/:userId',
+  async (req, reply) => {
+    try {
+      const { userId } = req.params as {
+        userId: string
+      }
+
+      const data =
+        await getChatData(userId)
+
+      return reply.send(data)
+    } catch (err) {
+      console.error(err)
+
+      return reply.code(500).send({
+        error:
+          'Failed to load chat data',
+      })
+    }
+  },
+)
 
 // --- start server ---
 app.listen({ port: 3001 }, (err, address) => {

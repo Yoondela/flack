@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto'
 import { ChannelSchema } from '@/shared/schemas/channel.schema.js'
 import { ChannelMemberSchema } from '@/shared/schemas/channelMember.schema.js'
+import { makeSyncUser } from './syncUser.js'
 import type { ChannelRepository } from '@/domain/channel/channel.repository.js'
 import type { EventDispatcher } from '@/application/events/eventDispatcher.js'
 import type { UserRepository } from '@/domain/user/user.repository.js'
@@ -9,6 +10,7 @@ export function makeEnsureDMChannel(
   repo: ChannelRepository,
   dispatcher: EventDispatcher,
   userRepo: UserRepository,
+  syncUser: ReturnType<typeof makeSyncUser>,
 ) {
   return async function ensureDMChannel({
     userA,
@@ -19,6 +21,8 @@ export function makeEnsureDMChannel(
   }) {
 
     try{
+      console.log('CP-4')
+
 
       console.log("Making DM channel between", userA, "and", userB)
       
@@ -40,13 +44,18 @@ export function makeEnsureDMChannel(
       console.log("DM channel created with ID:", channel.id)
 
       // 🔥 fetch users FIRST
-      const [userAData, userBData] = await Promise.all([
-        userRepo.findById(userA),
-        userRepo.findById(userB),
-      ])
-      
-      if (!userAData || !userBData) {
-        throw new Error('Users not found when creating DM channel')
+      let userAData = await userRepo.findById(userA)
+
+      if (!userAData) {
+        console.log('User A not found locally, syncing...')
+        userAData = await syncUser(userA)
+      }
+
+      let userBData = await userRepo.findById(userB)
+
+      if (!userBData) {
+        console.log('User B not found locally, syncing...')
+        userBData = await syncUser(userB)
       }
       
       // 🔥 create enriched members
@@ -54,7 +63,7 @@ export function makeEnsureDMChannel(
         ChannelMemberSchema.parse({
           channelId: channel.id,
           userId: userAData.id,
-          // username: userAData.username,
+          username: userAData.username,
           avatar: userAData.avatar,
           email: userAData.email,
           role: 'member',
@@ -66,7 +75,7 @@ export function makeEnsureDMChannel(
         ChannelMemberSchema.parse({
           channelId: channel.id,
           userId: userBData.id,
-          // username: userBData.username,
+          username: userBData.username,
           avatar: userBData.avatar,
           email: userBData.email,
           role: 'member',
