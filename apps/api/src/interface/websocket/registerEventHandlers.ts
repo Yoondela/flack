@@ -14,9 +14,11 @@ export function registerEventHandlers(
   dispatcher.on('MESSAGE_CREATED', async (event) => {
     const { channelId } = event.payload
 
-    const senderId = event.payload.sender
+    const senderId = event.payload.sender.id
 
     const members = await channelRepo.getMembers(channelId)
+
+    console.log("Members of channel:", members)
 
     // 🔥 find sender as ChannelMember (already has username + avatar)
     const sender = members.find(m => m.userId === senderId)

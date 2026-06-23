@@ -8,7 +8,14 @@ export const MessageCreatedEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    sender: z.string(),
+    sender: z
+      .object({
+      id: z.string(),
+      username: z.string().optional().default('Unknown'),
+      avatar: z.string().optional(),
+      email: z.string().optional()
+    }),
+
     content: z.string(),
     lastMessage: z
       .object({
@@ -27,7 +34,13 @@ export const MessageSentEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    sender: z.string(),
+    sender: z
+      .object({
+      id: z.string(),
+      username: z.string().optional().default('Unknown'),
+      avatar: z.string().optional(),
+      email: z.string().optional()
+    }),
     content: z.string(),
     lastMessage: z
       .object({
@@ -46,7 +59,13 @@ export const MessageReceivedEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     channelId: z.string(),
-    sender: z.string(),
+    sender: z
+      .object({
+      id: z.string(),
+      username: z.string().optional().default('Unknown'),
+      avatar: z.string().optional(),
+      email: z.string().optional()
+    }),
     content: z.string(),
     lastMessage: z
       .object({

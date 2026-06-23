@@ -34,6 +34,9 @@ export function makeSendMessage(
     
     console.log("Sender profile/////:", senderProfile)
     const senderName = senderProfile?.username || 'Unknown'
+    const senderEmail = senderProfile?.email || 'Unknown'
+    const senderAvatar = senderProfile?.avatar || 'Unknown'
+
     console.log("Parsed input:", parsed)
 
     const members = await channelRepo.getMembers(parsed.channelId)
@@ -69,12 +72,26 @@ export function makeSendMessage(
       }
     )
 
+        const sender = {
+          id: saved.sender,
+          username: senderName,
+          avatar: senderAvatar,
+          email: senderEmail,
+        }
+    
+        console.log("Sender info:", sender)
+
     dispatcher.emit({
       type: 'MESSAGE_CREATED',
       payload: {
         id: saved.id,
         channelId: saved.channelId,
-        sender: saved.sender,
+        sender: {
+          id: saved.sender,
+          username: senderName,
+          avatar: senderAvatar,
+          email: senderEmail,
+        },
         content: saved.content,
         lastMessage: {
           content: saved.content,
@@ -85,6 +102,8 @@ export function makeSendMessage(
         createdAt: saved.createdAt.toISOString(),
       },
     })
+
+    console.log("Message saved and event emitted:", saved)
 
     return saved
   }
