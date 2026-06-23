@@ -61,7 +61,7 @@ const createChannel = makeCreateChannel(channelRepo, dispatcher)
 const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher, userRepo, syncUser)
 const startDM = makeStartDM(ensureDMChannel)
 const getChannels = makeGetChannels(channelRepo)
-const getChannelMessages = makeGetChannelMessages(messageRepo)
+const getChannelMessages = makeGetChannelMessages(messageRepo, userRepo)
 const getChatData = makeGetChatData(
   getChannels,
   getChannelMessages,
@@ -144,20 +144,6 @@ app.post('/ensure-dm', async (req, reply) => {
     })
   }
 })
-
-// app.get(
-//   '/channels/:userId',
-//   async (req, reply) => {
-//     const { userId } = req.params as {
-//       userId: string
-//     }
-
-//     const channels =
-//       await getChannels(userId)
-
-//     return reply.send(channels)
-//   },
-// )
 
 app.get(
   '/channels/:channelId/messages',

@@ -41,4 +41,12 @@ export class MongoUserRepo
 
     return user
   }
+
+  async findManyByIds(
+    ids: string[],
+  ): Promise<User[]> {
+    return UserModel.find({
+      id: { $in: ids },
+    }).lean()
+  }
 }
