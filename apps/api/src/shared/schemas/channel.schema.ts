@@ -6,6 +6,14 @@ export const ChannelSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional(),
   avatar: z.string().optional(),
+  lastMessage: z
+    .object({
+      content: z.string(),
+      senderId: z.string(),
+      senderName: z.string(),
+      createdAt: z.date(),
+    })
+    .optional(),
   createdBy: z.string().optional(),
   createdAt: z.date(),
   updatedAt: z.date().optional(),

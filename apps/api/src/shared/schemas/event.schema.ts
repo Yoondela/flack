@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { ChannelMemberSchema } from './channelMember.schema.js'
 import { MessageSchema } from './message.schema.js'
+import { late } from 'zod/v3'
 
 export const MessageCreatedEventSchema = z.object({
   type: z.literal('MESSAGE_CREATED'),
@@ -9,6 +10,14 @@ export const MessageCreatedEventSchema = z.object({
     channelId: z.string(),
     sender: z.string(),
     content: z.string(),
+    lastMessage: z
+      .object({
+        content: z.string(),
+        senderId: z.string(),
+        senderName: z.string(),
+        createdAt: z.date(),
+      })
+      .optional(),
     createdAt: z.string(),
   }),
 })
@@ -20,6 +29,14 @@ export const MessageSentEventSchema = z.object({
     channelId: z.string(),
     sender: z.string(),
     content: z.string(),
+    lastMessage: z
+      .object({
+        content: z.string(),
+        senderId: z.string(),
+        senderName: z.string(),
+        createdAt: z.date(),
+      })
+      .optional(),
     createdAt: z.string(),
   }),
 })
@@ -31,6 +48,14 @@ export const MessageReceivedEventSchema = z.object({
     channelId: z.string(),
     sender: z.string(),
     content: z.string(),
+    lastMessage: z
+      .object({
+        content: z.string(),
+        senderId: z.string(),
+        senderName: z.string(),
+        createdAt: z.date(),
+      })
+      .optional(),
     createdAt: z.string(),
   }),
 })
@@ -52,6 +77,15 @@ export const ChannelAvailableEventSchema = z.object({
   payload: z.object({
     id: z.string(),
     type: z.enum(['public', 'dm']),
+    lastMessage: z
+      .object({
+        content: z.string(),
+        senderId: z.string(),
+        senderName: z.string(),
+        createdAt: z.date(),
+      })
+      .optional(),
+    name: z.string().min(1).max(100).optional(),
     members: z.array(ChannelMemberSchema),
     createdAt: z.string(),
   }),

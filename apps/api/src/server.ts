@@ -56,7 +56,7 @@ registerEventHandlers(dispatcher, gateway, channelRepo, userRepo)
 
 // --- Use cases ---
 const syncUser = makeSyncUser(userRepo, profilerClient)
-const sendMessage = makeSendMessage(channelRepo, messageRepo, dispatcher)
+const sendMessage = makeSendMessage(channelRepo, messageRepo, userRepo, dispatcher)
 const createChannel = makeCreateChannel(channelRepo, dispatcher)
 const ensureDMChannel = makeEnsureDMChannel(channelRepo, dispatcher, userRepo, syncUser)
 const startDM = makeStartDM(ensureDMChannel)

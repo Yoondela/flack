@@ -112,6 +112,7 @@ export function makeEnsureDMChannel(
         id: channel.id,
         type: channel.type,
         members,
+        lastMessage: channel.lastMessage,
         createdAt: channel.createdAt.toISOString(),
       },
     })

@@ -21,6 +21,13 @@ const ChannelModelSchema = new mongoose.Schema<Channel>({
   avatar: String,
   createdBy: String,
 
+  lastMessage: {
+    content: String,
+    senderId: String,
+    senderName: String,
+    createdAt: Date,
+  },
+
   createdAt: {
     type: Date,
     required: true,

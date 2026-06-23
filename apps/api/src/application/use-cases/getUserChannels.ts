@@ -19,6 +19,8 @@ export function makeGetChannels(
         avatar: channel.avatar,
         createdAt: channel.createdAt,
 
+        lastMessage: channel.lastMessage,
+
         members:
           await repository.getMembers(
             channel.id,

@@ -13,4 +13,14 @@ export interface ChannelRepository {
   findChannelsForUser(
   userId: string,
 ): Promise<Channel[]>
+
+  updateLastMessage(
+    channelId: string,
+    lastMessage: {
+      content: string
+      senderId: string
+      senderName: string
+      createdAt: Date
+    }
+  ): Promise<void>
 }

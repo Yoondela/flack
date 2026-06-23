@@ -126,4 +126,19 @@ export class MongoChannelRepo
       },
     }).lean()
   }
+
+  async updateLastMessage(
+    channelId: string,
+    lastMessage: {
+      content: string
+      senderId: string
+      senderName: string
+      createdAt: Date
+    }
+  ): Promise<void> {
+    await ChannelModel.updateOne(
+      { id: channelId },
+      { $set: { lastMessage } }
+    )
+  }
 }

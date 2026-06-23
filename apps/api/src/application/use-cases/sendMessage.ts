@@ -4,22 +4,36 @@ import { MessageSchema } from '@/shared/schemas/message.schema.js'
 import type { ChannelRepository } from '@/domain/channel/channel.repository.js'
 import type { MessageRepository } from '@/domain/message/message.repository.js'
 import type { EventDispatcher } from '@/application/events/eventDispatcher.js'
+import type { UserRepository } from '@/domain/user/user.repository.js'
+import { appContext } from '@/context/app.context.js'
 
 const SendMessageInput = z.object({
   channelId: z.string(),
   senderId: z.string(),
   content: z.string().min(1),
+  // senderName: z.string().min(1),
 })
+
+const flackUserId = appContext.getFlackUserId()
+
 
 export function makeSendMessage(
   channelRepo: ChannelRepository,
   messageRepo: MessageRepository,
+  userRepo: UserRepository,
   dispatcher: EventDispatcher
 ) {
+
+  
+  
   return async function sendMessage(input: z.infer<typeof SendMessageInput>) {
+    
     console.log("saving message..")
     const parsed = SendMessageInput.parse(input)
-
+    const senderProfile = await userRepo.findById(parsed.senderId) 
+    
+    console.log("Sender profile/////:", senderProfile)
+    const senderName = senderProfile?.username || 'Unknown'
     console.log("Parsed input:", parsed)
 
     const members = await channelRepo.getMembers(parsed.channelId)
@@ -45,6 +59,16 @@ export function makeSendMessage(
 
     const saved = await messageRepo.create(message)
 
+    const lastSaved = await channelRepo.updateLastMessage(
+      parsed.channelId,
+      {
+        content: message.content,
+        senderId: parsed.senderId,
+        senderName: senderName,
+        createdAt: message.createdAt,
+      }
+    )
+
     dispatcher.emit({
       type: 'MESSAGE_CREATED',
       payload: {
@@ -52,6 +76,12 @@ export function makeSendMessage(
         channelId: saved.channelId,
         sender: saved.sender,
         content: saved.content,
+        lastMessage: {
+          content: saved.content,
+          senderId: saved.sender,
+          senderName: senderName,
+          createdAt: saved.createdAt,
+        },
         createdAt: saved.createdAt.toISOString(),
       },
     })
